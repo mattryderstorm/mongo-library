@@ -2,6 +2,7 @@
 
 use Mojolicious::Lite;
 use MongoDB;
+use Data::Dumper;
 
 get '/' => sub { 
     my $self = shift;
@@ -16,6 +17,16 @@ get '/books' => sub {
     my $cursor = $coll->find;                # finds everything
 
     $self->render( 'books', books_cursor => $cursor, db => $db );
+};
+
+get '/books/edit/:id' => sub {
+	my $self = shift;
+    	my $mongo  = MongoDB::MongoClient->new;  # localhost by default
+	my $id = $self->stash('id');
+	#my $db     = $mongo->get_database( 'library' );
+    	#my $coll   = $db->get_collection( 'books' );
+    	#my $cursor = $coll->find_one( name => $id );                # finds everything
+	$self->render(item => $id, booday => 'boo');
 };
 
 post '/books' => sub { 
@@ -59,13 +70,16 @@ app->start;
 
 __DATA__
 @@ books.html.ep
+
 <h1>Here is your list of books!</h1>
 <ul>
 <% while( my $doc = $books_cursor->next ) {  %>
 <%   my $author = $db->get_collection( 'authors' )->find_one( { _id => $doc->{author} } ); %>
-<li><%= $doc->{title} %> by <a href="/author/<%= $author->{slug} %>">
-      <%= $author->{first_name} %> <%= $author->{last_name} %>
-</a></li>y
+<li><%= $doc->{title} %> by 
+<a href="/author/<%= $author->{slug} %>"> <%= $author->{first_name} %> <%= $author->{last_name} %>  </a>
+<a href="/books/edit/<%= $doc->{title} %>"> xxx <%= $doc->{title} %> </a>
+
+</li>
 <% } %>
 <form method='post' action='/books/'>
 	<dl>
@@ -91,4 +105,8 @@ __DATA__
 </form>
 </ul>
 
-
+@@ bookseditid.html.ep
+<%= $item %>
+xxx
+<%= $booday %>
+xxx

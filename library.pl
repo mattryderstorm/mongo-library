@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 use Mojolicious::Lite;
 use MongoDB;
 
@@ -35,6 +37,10 @@ post '/books' => sub {
 
     $mongo->get_database( 'library' )
       ->get_collection( 'books' )->insert( $new_book );
+    my $db     = $mongo->get_database( 'library' );
+    my $coll   = $db->get_collection( 'books' );
+    my $cursor = $coll->find;                # finds everything
+    $self->render( 'books', books_cursor => $cursor, db => $db );
 };
 
 get '/books/:genre' => sub { 
@@ -61,6 +67,28 @@ __DATA__
       <%= $author->{first_name} %> <%= $author->{last_name} %>
 </a></li>y
 <% } %>
+<form method='post' action='/books/'>
+	<dl>
+
+		<dt> Title </dt>
+		<dd> <input type='text' name='title' value=''></dd>
+		<dt> Author </dt>
+		<dd> <input type='text' name='author' value=''></dd>
+		<dd> Genre: </dd>
+		<dd> <input type='text' name='genre' value=''></dd>
+		Publication
+		<dt> Name </dt>
+		<dd> <input type='text' name='pub_name' /> </dd>
+		<dt> Location </dt>
+		<dd> <input type='text' name='pub_location' /> </dd>
+		<dt> Pub Month </dt>
+		<dd> <input type='text' name='pub_month' /> </dd>
+		<dt> Pub Year </dt>
+		<dd> <input type='text' name='pub_year' /> </dd>
+		<input type='submit' value='Sulbmit' />
+		<input type='reset' value='Reset' />
+	</dl>
+</form>
 </ul>
 
 

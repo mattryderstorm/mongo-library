@@ -3,6 +3,7 @@
 use Mojolicious::Lite;
 use MongoDB;
 use Data::Dumper;
+use JSON::Schema;
 
 get '/' => sub { 
     my $self = shift;
@@ -30,9 +31,10 @@ get '/books/edit/:id' => sub {
 };
 
 post '/books' => sub { 
-    my $self   = shift;
+    my $self   = shift	;
     my $mongo  = MongoDB::MongoClient->new;
-
+    my $rule = read_file();
+    my $schema = JSON::Schema->new(from_json($rule));
     my $new_book = { title   => scalar $self->param( 'title' ),
                      author  => scalar $self->param( 'author' ),
                      genre   => [ $self->param( 'genre' ) ],
@@ -45,13 +47,19 @@ post '/books' => sub {
                          )
                      }
                    };
-
-    $mongo->get_database( 'library' )
-      ->get_collection( 'books' )->insert( $new_book );
-    my $db     = $mongo->get_database( 'library' );
-    my $coll   = $db->get_collection( 'books' );
-    my $cursor = $coll->find;                # finds everything
-    $self->render( 'books', books_cursor => $cursor, db => $db );
+    my $result = $schema->validate($new_book);
+	my $errors = {};
+    if ($result) {	
+	    $mongo->get_database( 'library' )
+	      ->get_collection( 'books' )->insert( $new_book );
+	                   # finds everything
+    } else {
+   	$errors = { 'Errors Received' => $result->errrors };
+    }
+	    my $db     = $mongo->get_database( 'library' );
+	    my $coll   = $db->get_collection( 'books' );
+	    my $cursor = $coll->find; 
+	    $self->render( 'books', books_cursor => $cursor, db => $db, errors => $errors );
 };
 
 get '/books/:genre' => sub { 
